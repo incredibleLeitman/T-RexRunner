@@ -11,11 +11,14 @@ public class LevelController : MonoBehaviour
     GameObject m_light = null;
 
     public float scrollSpeed = 10;
+    public AudioSource audioSource;
+    public AudioClip audioClipScore;
 
     // Start is called before the first frame update
     void Start()
     {
         m_light = GameObject.Find("Directional Light");
+        audioSource.clip = audioClipScore;
     }
 
     // Update is called once per frame
@@ -38,6 +41,8 @@ public class LevelController : MonoBehaviour
         int score = ((int)m_distance) * 10;
         Text textScore = GetComponentInChildren<Text>();
         textScore.text = "score: " + score;
+        if (score % 1000 == 0)
+            audioSource.Play();
 
         // set difficulty
         scrollSpeed = (score / 1000) + 10;

@@ -12,10 +12,14 @@ public class PlayerMovement : MonoBehaviour
     int m_layerObstacle = 0;
 
     public float jumpSpeed = 6f;
+    public AudioSource audioSource;
+    public AudioClip audioClipJump;
+    public AudioClip audioClipHit;
 
     // Start is called before the first frame update
     void Start ()
-    { }
+    {
+    }
 
     void Awake ()
     {
@@ -43,8 +47,11 @@ public class PlayerMovement : MonoBehaviour
         //    m_rigid.velocity += Vector3.up * Physics2D.gravity.y * (jumpSpeed - 0.5f - 1) * Time.deltaTime;
         //}
 
-        if (m_onGround && (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)))
+        if (m_onGround && Input.GetKeyDown(KeyCode.Space))
         {
+            audioSource.clip = audioClipJump;
+            audioSource.Play();
+
             //m_rigid.AddForce(new Vector3(0, 1, 0) * jumpSpeed, ForceMode.Impulse);
             m_rigid.velocity = Vector3.up * jumpSpeed;
             m_isJumping = true;
@@ -52,7 +59,7 @@ public class PlayerMovement : MonoBehaviour
             m_onGround = false;
         }
 
-        if ((Input.GetKey(KeyCode.Space) || Input.GetMouseButton(0)) && m_isJumping == true)
+        if (Input.GetKey(KeyCode.Space) && m_isJumping == true)
         {
             if (m_jumpCounter > 0)
             {
@@ -76,6 +83,9 @@ public class PlayerMovement : MonoBehaviour
     {
         if (col.gameObject.layer == m_layerObstacle)
         {
+            audioSource.clip = audioClipHit;
+            audioSource.Play();
+
             // stop the game
             Debug.Log("GameOver!");
             Debug.Log("Hit " + col.gameObject.name);
