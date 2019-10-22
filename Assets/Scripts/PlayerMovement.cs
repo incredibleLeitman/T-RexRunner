@@ -1,25 +1,23 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
-    bool m_onGround = true;
+    bool m_onGround = false;
     bool m_isJumping = false;
+    bool m_start = false;
     float m_jumpCounter = 0;
     Rigidbody m_rigid = null;
     int m_layerGround = 0;
     int m_layerObstacle = 0;
+    ParticleSystem m_particles = null;
 
-    public float jumpSpeed = 6f;
+    public float jumpSpeed = 20f;
     public AudioSource audioSource;
     public AudioClip audioClipJump;
     public AudioClip audioClipHit;
-
-    // Start is called before the first frame update
-    void Start ()
-    {
-    }
+    public GameObject restartButton;
 
     void Awake ()
     {
@@ -27,39 +25,37 @@ public class PlayerMovement : MonoBehaviour
         //m_layerGround = LayerMask.GetMask("Level");
         m_layerGround = LayerMask.NameToLayer("Level");
         m_layerObstacle = LayerMask.NameToLayer("Obstacles");
+        m_particles = GetComponent<ParticleSystem>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         //m_rigid.useGravity = false;
         //if (Input.GetKeyDown(KeyCode.Space))
         //{
-        //    m_rigid.velocity += Vector3.up * jumpSpeed;
-        //}
+        //    m_start = true; // start after first jump
 
-        //if (m_rigid.velocity.y < 0)
-        //{
-        //    m_rigid.velocity += Vector3.up * Physics2D.gravity.y * (jumpSpeed - 1) * Time.deltaTime;
-        //}
-        //else if (m_rigid.velocity.y > 0 && !Input.GetKeyDown(KeyCode.Space))
-        //{
-        //    m_rigid.velocity += Vector3.up * Physics2D.gravity.y * (jumpSpeed - 0.5f - 1) * Time.deltaTime;
+        //    audioSource.clip = audioClipJump;
+        //    audioSource.Play();
+
+        //    m_rigid.velocity += Vector3.up * jumpSpeed;
+        //    m_onGround = false;
         //}
 
         if (m_onGround && Input.GetKeyDown(KeyCode.Space))
         {
+            m_start = true; // start after first jump
+
             audioSource.clip = audioClipJump;
             audioSource.Play();
 
             //m_rigid.AddForce(new Vector3(0, 1, 0) * jumpSpeed, ForceMode.Impulse);
             m_rigid.velocity = Vector3.up * jumpSpeed;
             m_isJumping = true;
-            m_jumpCounter = 0.3f;
+            m_jumpCounter = 0.4f;
             m_onGround = false;
         }
-
-        if (Input.GetKey(KeyCode.Space) && m_isJumping == true)
+        else if (Input.GetKey(KeyCode.Space) && m_isJumping == true)
         {
             if (m_jumpCounter > 0)
             {
@@ -71,11 +67,25 @@ public class PlayerMovement : MonoBehaviour
                 m_isJumping = false;
             }
         }
-
-        if (Input.GetKeyUp(KeyCode.Space))
+        else if (Input.GetKeyUp(KeyCode.Space) || m_isJumping == false)
         {
-            m_rigid.velocity = Vector3.down * jumpSpeed;
+            m_rigid.velocity = Vector3.down * jumpSpeed * 0.8f; // * 1.5f;
             m_isJumping = false;
+        }
+
+        if (m_start)
+        {
+            if (m_onGround)
+            {
+                if (m_particles.isPlaying == false)
+                {
+                    m_particles.Play();
+                }
+            }
+            else if (m_particles.isPlaying)
+            {
+                m_particles.Stop();
+            }
         }
     }
 
@@ -83,18 +93,16 @@ public class PlayerMovement : MonoBehaviour
     {
         if (col.gameObject.layer == m_layerObstacle)
         {
-            audioSource.clip = audioClipHit;
-            audioSource.Play();
-
-            // stop the game
-            Debug.Log("GameOver!");
-            Debug.Log("Hit " + col.gameObject.name);
-
-            //Time.timeScale = 0; // this will freeze the game, stop
+            Debug.Log("collision with " + col.gameObject.name);
+            //audioSource.clip = audioClipHit;
+            //audioSource.Play();
+            StartCoroutine(playSound());
 
             //Application.Quit(); // game exit
+            restartButton.SetActive(true); // false to hide, true to show
 
-            //Application.LoadLevel(Application.loadedLevel); // or reload current level
+            // stop the game
+            Time.timeScale = 0; // this will freeze the game, stop
         }
         else if (//col.gameObject.tag == ("Ground") // use layer instead of Tags -> better performance
                  col.gameObject.layer == m_layerGround &&
@@ -102,5 +110,12 @@ public class PlayerMovement : MonoBehaviour
         {
             m_onGround = true;
         }
+    }
+
+    IEnumerator playSound ()
+    {
+        audioSource.clip = audioClipHit;
+        audioSource.Play();
+        yield return new WaitWhile(() => audioSource.isPlaying);
     }
 }

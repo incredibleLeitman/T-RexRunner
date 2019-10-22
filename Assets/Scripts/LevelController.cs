@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class LevelController : MonoBehaviour
@@ -8,58 +6,78 @@ public class LevelController : MonoBehaviour
     float m_distance = 0;
     float m_next = 2;
     bool m_start = false;
+    float m_startPosX = 0;
+    float m_length = 0;
+    int m_score = 0;
     GameObject m_light = null;
 
-    public float scrollSpeed = 10;
+    public float scrollSpeed = 10f;
     public AudioSource audioSource;
     public AudioClip audioClipScore;
 
-    // Start is called before the first frame update
     void Start()
     {
+        m_startPosX = transform.position.x;
         m_light = GameObject.Find("Directional Light");
         audioSource.clip = audioClipScore;
     }
 
-    // Update is called once per frame
-    void Update()
+    void FixedUpdate ()
     {
         if (Input.GetKeyDown(KeyCode.Space))
+        {
             m_start = true;
+        }
 
         if (m_start == false) return;
 
+        //Debug.Log("fixedTime " + Time.fixedTime);
         //Debug.Log("currentTime: " + Time.time);
         //Debug.Log("deltaTime: " + Time.deltaTime);
 
         // day and night cycle
         m_light.transform.RotateAround(Vector3.zero, Vector3.forward, 2 * Time.deltaTime);
 
-        transform.position += (Vector3.left * scrollSpeed * Time.deltaTime);
-        m_distance += scrollSpeed * Time.deltaTime;
+        // auto move
+        float delta = scrollSpeed * Time.deltaTime;
+        transform.position += (Vector3.left * delta);
+        if (transform.position.x < m_startPosX - m_length / 2)
+        {
+            transform.position = new Vector3(transform.position.x + m_length, transform.position.y, transform.position.z);
+        }
+        m_distance += delta;
+    }
 
-        int score = ((int)m_distance) * 10;
-        Text textScore = GetComponentInChildren<Text>();
-        textScore.text = "score: " + score;
-        if (score % 1000 == 0)
-            audioSource.Play();
+    void Update ()
+    {
+        if (m_start == false) return;
+
+        // score
+        int score = (int)(m_distance * 10);
+        GetComponentInChildren<Text>().text = "score: " + score;
 
         // set difficulty
-        scrollSpeed = (score / 1000) + 10;
+        scrollSpeed = (score / 1000f) + 10f;
+
+        // play sound
+        score /= 1000;
+        if (score > m_score)
+        {
+            m_score = score;
+            audioSource.Play();
+        }
 
         // spawn obsticles
         if (Time.time > m_next)
         {
-            //if (Random.Range(0, 100) > 80)
             int count = Random.Range(1, 4);
-            Debug.Log(Time.time + " spawning " + count + "items...");
             for (int i = 0; i < count; ++i)
             {
                 GameObject obstacle = ObstacleSpawner.Instance().SpawnObstacle();
-                obstacle.transform.position += Vector3.right * (60.0f + i*2);
+                obstacle.transform.position += Vector3.right * (20.0f + i*2);
                 obstacle.transform.SetParent(transform, true);
             }
-            m_next += 4;
+            m_next = Time.time + 4;
         }
     }
 }

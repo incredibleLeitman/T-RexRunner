@@ -25,16 +25,7 @@ public class ObstacleSpawner : MonoBehaviour
     public GameObject SpawnObstacle ()
     {
         GameObject obj = Instantiate(obstacles[Random.Range(0, 3)]);
+        Destroy(obj, 5); // TODO: better use for object pool or destroy on position check
         return obj;
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
     }
 }
