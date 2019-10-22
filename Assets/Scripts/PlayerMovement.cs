@@ -93,15 +93,20 @@ public class PlayerMovement : MonoBehaviour
     {
         if (col.gameObject.layer == m_layerObstacle)
         {
-            Debug.Log("collision with " + col.gameObject.name);
-            //audioSource.clip = audioClipHit;
-            //audioSource.Play();
-            StartCoroutine(playSound());
+            //Debug.Log("collision with " + col.gameObject.name);
 
-            //Application.Quit(); // game exit
+            //audioSource.clip = audioClipHit;
+            //audioSource.Play(); // does not play if timeScale is set so zero
+            AudioSource.PlayClipAtPoint(audioClipHit, Camera.main.transform.position, 1.0f);
+
             restartButton.SetActive(true); // false to hide, true to show
 
+            // set highscore
+            if (LevelController.PlayerScore > PlayerPrefs.GetInt("highscore"))
+                PlayerPrefs.SetInt("highscore", LevelController.PlayerScore);
+
             // stop the game
+            //Application.Quit(); // game exit
             Time.timeScale = 0; // this will freeze the game, stop
         }
         else if (//col.gameObject.tag == ("Ground") // use layer instead of Tags -> better performance
@@ -110,12 +115,5 @@ public class PlayerMovement : MonoBehaviour
         {
             m_onGround = true;
         }
-    }
-
-    IEnumerator playSound ()
-    {
-        audioSource.clip = audioClipHit;
-        audioSource.Play();
-        yield return new WaitWhile(() => audioSource.isPlaying);
     }
 }

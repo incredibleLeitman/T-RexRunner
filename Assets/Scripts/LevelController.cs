@@ -3,23 +3,30 @@ using UnityEngine.UI;
 
 public class LevelController : MonoBehaviour
 {
+    bool m_start = false;
     float m_distance = 0;
     float m_next = 2;
-    bool m_start = false;
     float m_startPosX = 0;
     float m_length = 0;
-    int m_score = 0;
+    int m_scoreCount = 0;
     GameObject m_light = null;
 
+    public static int PlayerScore = 0;
     public float scrollSpeed = 10f;
     public AudioSource audioSource;
     public AudioClip audioClipScore;
+    public Text textScore;
+    public Text textHScore;
 
     void Start()
     {
         m_startPosX = transform.position.x;
         m_light = GameObject.Find("Directional Light");
         audioSource.clip = audioClipScore;
+
+        int hScore = PlayerPrefs.GetInt("highscore");
+        if (hScore > 0)
+            textHScore.text = "highscore: " + hScore;
     }
 
     void FixedUpdate ()
@@ -54,16 +61,18 @@ public class LevelController : MonoBehaviour
 
         // score
         int score = (int)(m_distance * 10);
-        GetComponentInChildren<Text>().text = "score: " + score;
+        //GetComponentInChildren<Text>().text = "score: " + score;
+        textScore.text = "score: " + score;
+        PlayerScore = score;
 
         // set difficulty
         scrollSpeed = (score / 1000f) + 10f;
 
         // play sound
         score /= 1000;
-        if (score > m_score)
+        if (score > m_scoreCount)
         {
-            m_score = score;
+            m_scoreCount = score;
             audioSource.Play();
         }
 
